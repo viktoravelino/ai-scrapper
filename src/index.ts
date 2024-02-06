@@ -46,6 +46,9 @@ async function main() {
     frequencyPenalty: 0,
     presencePenalty: 0,
     maxTokens: 256,
+    modelKwargs: {
+      response_format: { type: "json_object" },
+    },
   });
 
   const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
