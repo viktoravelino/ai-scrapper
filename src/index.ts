@@ -8,14 +8,14 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 
 // console.log(figlet.textSync("Dir Manager"));
 
-async function run(url: string) {
+async function run(url: string, target: string) {
   const docsCreated = await createData(url);
 
   const embeddings = new OpenAIEmbeddings();
   const vectorStore = await prepareDocs(docsCreated, embeddings);
 
   const selectors = await fetchSelectorsOpenAI(vectorStore, {
-    target: "button",
+    target,
   });
 
   console.log("Selectors: ", selectors);
@@ -31,6 +31,7 @@ async function main() {
 
   program
     .argument("<url>", "URL of the webpage to take screenshots of")
+    .argument("<target>", "The type of element to take screenshots of")
     .action(run);
 
   await program.parseAsync(process.argv);
