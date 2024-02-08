@@ -14,7 +14,7 @@ async function run(url: string) {
   const embeddings = new OpenAIEmbeddings();
   const vectorStore = await prepareDocs(docsCreated, embeddings);
 
-  const { selectors } = await fetchSelectorsOpenAI(vectorStore, {
+  const selectors = await fetchSelectorsOpenAI(vectorStore, {
     target: "button",
   });
 

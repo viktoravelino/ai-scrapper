@@ -79,7 +79,19 @@ export async function fetchSelectorsOpenAI(
 
     console.log("Chain response: ", answer);
 
-    return JSON.parse(answer);
+    // try to parse the answer as json and return it
+    // if it fails, convert to an array
+    try {
+      const parsedAnswer = JSON.parse(answer);
+      return parsedAnswer.selectors;
+    } catch (error) {
+      return answer
+        .split("[")[2]
+        .replace(/"/g, "")
+        .split(",")
+        .filter((selector) => selector.trim().length > 0)
+        .map((selector) => selector.trim());
+    }
   } catch (error) {
     console.error("Error fetching selectors: ", error);
     process.exit(1);
