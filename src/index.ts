@@ -4,6 +4,10 @@ import { prepareDocsIntoVectorStore } from "./scripts/prepare-docs";
 
 import { fetchSelectorsFromOpenAI } from "./scripts/openAI";
 import { OpenAIEmbeddings } from "@langchain/openai";
+import { screenshotComponents } from "./scripts/screenshot";
+import { input } from "@inquirer/prompts";
+import dotenv from "dotenv";
+dotenv.config();
 
 async function run(url: string, target: string) {
   // fetch the html and create a data file
@@ -19,7 +23,22 @@ async function run(url: string, target: string) {
     target,
   });
 
-  console.log("Selectors: ", selectors);
+  while (true) {
+    const continueScreenshot = await input({
+      message: "Would you like to continue taking screenshots? (y/n): ",
+    });
+    if (continueScreenshot === "n") {
+      process.exit(0);
+    }
+
+    if (continueScreenshot === "y") {
+      break;
+    }
+
+    console.log("Invalid input, please try again");
+  }
+
+  await screenshotComponents(url, target, selectors);
 
   process.exit(0);
 }

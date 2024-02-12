@@ -20,9 +20,9 @@ If they ask you to find all "button" elements, you would look for all button tag
 For example, mui components may have the classes "MuiButton-root" and "MuiButton-variantSolid" among others. 
 Other components libraries and custom elements will have their own. 
 Use your best judgement and return an array of matching tags and query selectors from the documents provided.
-It is VERY important that you only return an json that identifies matching tags and selectors. 
+It is VERY important that you only return an json that identifies matching selectors. 
 If you return anything else, the user will be very confused and will not be able to complete their task. 
-This is the desired format: array of objects with as an example "tags": ["button"], "selectors": [".MuiButton-root", ".MuiButton-variantSolid"].
+This is the desired format: array of objects with as an example "selectors": [".MuiButton-root", ".MuiButton-variantSolid"].
 If you are unable to find any matching elements within the documents, return an empty array.
 
 
@@ -85,11 +85,17 @@ export async function fetchSelectorsFromOpenAI(
       const parsedAnswer = JSON.parse(answer);
       return parsedAnswer.selectors;
     } catch (error) {
-      return answer
-        .split("[")[2]
+      // grab the first array of selectors from the response or the second if the first is empty
+      let selectors = answer.split("[")[2];
+
+      if (selectors === undefined) {
+        selectors = answer.split("[")[1];
+      }
+
+      return selectors
         .replace(/"/g, "")
         .split(",")
-        .filter((selector) => selector.trim().length > 0)
+        .filter((selector) => selector.trim().length > 1)
         .map((selector) => selector.trim());
     }
   } catch (error) {
