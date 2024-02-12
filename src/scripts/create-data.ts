@@ -1,10 +1,9 @@
 import * as cheerio from "cheerio";
-import { writeFile } from "fs/promises";
 import beautify from "js-beautify";
 
 // const url = "https://mui.com/joy-ui/react-button/";
 
-export async function createData(url: string) {
+export async function fetchHtmlAndCreateDataFile(url: string) {
   try {
     console.log("Fetching the page...");
     const response = await fetch(url);

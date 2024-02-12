@@ -32,7 +32,7 @@ Be aware that the html elements may contain classes and ids that may help you id
 Also, each element only contains the opening tag, so you will have to use your best judgement to identify the elements.
 `;
 
-export async function fetchSelectorsOpenAI(
+export async function fetchSelectorsFromOpenAI(
   vectorStore: MemoryVectorStore,
   { target }: { target: string }
 ) {

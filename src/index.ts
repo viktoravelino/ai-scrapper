@@ -1,20 +1,21 @@
 import { program } from "commander";
-// import figlet from "figlet";
-import { createData } from "./scripts/create-data";
-import { prepareDocs } from "./scripts/prepare-docs";
+import { fetchHtmlAndCreateDataFile } from "./scripts/create-data";
+import { prepareDocsIntoVectorStore } from "./scripts/prepare-docs";
 
-import { fetchSelectorsOpenAI } from "./scripts/openAI";
+import { fetchSelectorsFromOpenAI } from "./scripts/openAI";
 import { OpenAIEmbeddings } from "@langchain/openai";
 
-// console.log(figlet.textSync("Dir Manager"));
-
 async function run(url: string, target: string) {
-  const docsCreated = await createData(url);
+  // fetch the html and create a data file
+  const docsCreated = await fetchHtmlAndCreateDataFile(url);
 
   const embeddings = new OpenAIEmbeddings();
-  const vectorStore = await prepareDocs(docsCreated, embeddings);
 
-  const selectors = await fetchSelectorsOpenAI(vectorStore, {
+  // prepare the docs into a vector store
+  const vectorStore = await prepareDocsIntoVectorStore(docsCreated, embeddings);
+
+  // fetch the selectors from openai
+  const selectors = await fetchSelectorsFromOpenAI(vectorStore, {
     target,
   });
 
