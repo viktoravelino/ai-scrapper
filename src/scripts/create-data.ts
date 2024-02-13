@@ -1,5 +1,6 @@
 import * as cheerio from "cheerio";
 import beautify from "js-beautify";
+import * as fs from "fs";
 
 // const url = "https://mui.com/joy-ui/react-button/";
 
@@ -17,6 +18,11 @@ export async function fetchHtmlAndCreateDataFile(url: string) {
     $("head").remove();
     $("style").remove();
     $("pre").remove();
+    $("code").remove();
+    $("path").remove();
+    $("rect").remove();
+    $("use").remove();
+    $("symbol").remove();
 
     // get the main tag
     const main = $("main");
@@ -38,50 +44,45 @@ export async function fetchHtmlAndCreateDataFile(url: string) {
       inline_custom_elements: true,
     });
 
-    // remove all closing tags, split the html into lines, remove all empty lines
     const docLines = beautifiedHtml
       .replace(/<\/[^>]+>/g, "") // remove all closing tags
       .split("\n") // create an array of lines
-      .filter((line) => line.trim().length > 0) // remove all empty lines
-      .filter((line) => line.trim().charAt(0) === "<")
-      .filter((line) => !line.trim().startsWith("<path"))
-      .filter((line) => !line.trim().startsWith("<rect"))
-      .filter((line) => !line.trim().startsWith("<use"))
-      .filter((line) => !line.trim().startsWith("<code"))
-      .filter((line) => !line.trim().startsWith("<symbol"));
-    // remove all lines that are not html elements
+      .map((line) => line.trim()) // trim each line
+      .filter(
+        (trimmedLine) => trimmedLine.length > 0 && trimmedLine.charAt(0) === "<"
+      );
 
     // create an array of objects with the metadata and the page content
     const docs = docLines.map((line) => {
-      const elementName = line.trim().split(" ")[0].replace("<", "");
+      const trimmedLine = line.trim();
+      const elementName = trimmedLine
+        .replace(">", " ")
+        .split(" ")[0]
+        .replace("<", "");
 
       const attributes: string[] = [];
 
-      const classSelector = "class=";
-
-      if (line.includes(classSelector)) {
-        const classes = line
-          .split(classSelector)[1]
-          .split('"')[1]
-          .split(" ")
-          .join(", ");
-        attributes.push(`and contains the following classes: '${classes}'`);
+      const classMatch = trimmedLine.match(/class="([^"]*)"/);
+      if (classMatch) {
+        const [, classes] = classMatch;
+        attributes.push(
+          `and contains the following classes: '${classes.replace(/ /g, ", ")}'`
+        );
       }
 
-      const idSelector = " id=";
-      if (line.includes(idSelector)) {
-        const id = line.split(idSelector)[1].split('"')[1];
+      const idMatch = trimmedLine.match(/ id="([^"]*)"/);
+      if (idMatch) {
+        const [, id] = idMatch;
         attributes.push(`and it has the id of '${id}'`);
       }
 
       return {
         metadata: {
-          // source: url,
           content: `This element is '${elementName}' ${
-            attributes.length > 0 && attributes.join(", ")
-          }`,
+            attributes.length > 0 ? attributes.join(", ") : ""
+          }`.trim(),
         },
-        pageContent: line.trim(),
+        pageContent: trimmedLine,
       };
     });
 
