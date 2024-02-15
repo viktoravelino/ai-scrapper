@@ -1,6 +1,7 @@
 import { join } from "path";
 import * as fs from "fs";
 import puppeteer, { ElementHandle } from "puppeteer";
+import { asyncFilter } from "../utils/asyncFilter";
 
 export async function screenshotComponents(
   url: string,
@@ -14,9 +15,9 @@ export async function screenshotComponents(
   });
   console.log("Removing old images...");
   fs.readdirSync(join(__dirname, "images")).forEach((file) => {
-    if (file.endsWith(".png")) {
-      fs.unlinkSync(join(__dirname, "images", file));
-    }
+    // if (file.endsWith(".png")) {
+    fs.unlinkSync(join(__dirname, "images", file));
+    // }
   });
   console.log("✅ Done removing old images");
 
@@ -90,26 +91,32 @@ export async function screenshotComponents(
 
   console.log("Taking screenshots of elements...");
 
-  for (const [, { element, index }] of elementMap) {
-    await element
-      .screenshot({ path: join(__dirname, "images", `${target}-${index}.png`) })
-      .catch((err) => {
-        console.log(
-          'Button not in page; "Might be a11n or in a modal or different viewport": ',
-          err
-        );
-      });
-  }
+  const promises = Array.from(elementMap).map(
+    async ([, { element, index }]) => {
+      await element
+        .screenshot({
+          path: join(__dirname, "images", `${target}-${index}.png`),
+        })
+        .catch((err) => {
+          console.log(
+            'Button not in page; "Might be a11n or in a modal or different viewport": ',
+            err
+          );
+        });
+
+      // save classNames to a file
+      const classNames = await element.evaluate((el) =>
+        el.classList.toString()
+      );
+      fs.writeFileSync(
+        join(__dirname, "images", `${target}-${index}.txt`),
+        classNames
+      );
+    }
+  );
+
+  await Promise.all(promises);
 
   await browser.close();
   console.log("✅ Done taking screenshots");
-}
-
-export async function asyncFilter<T>(
-  array: T[],
-  predicate: (value: T, index: number, array: T[]) => Promise<boolean>
-) {
-  return Promise.all(array.map(predicate)).then((results) =>
-    array.filter((_v, index) => results[index])
-  );
 }

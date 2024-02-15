@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "npx tsc",
-    "run": "node -r ts-node/register --env-file=.env src/index.ts https://mui.com/joy-ui/react-button button",
+    "run": "ts-node src/index.ts https://mui.com/joy-ui/react-button button",
     "fetch": "ts-node src/index.ts https://mui.com/joy-ui/react-button button",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -19,6 +19,7 @@
     "@pinecone-database/pinecone": "^2.0.1",
     "cheerio": "^1.0.0-rc.12",
     "commander": "^12.0.0",
+    "css": "^3.0.0",
     "dotenv": "^16.4.3",
     "figlet": "^1.7.0",
     "js-beautify": "^1.14.11",
@@ -26,6 +27,7 @@
     "puppeteer": "^19.11.1"
   },
   "devDependencies": {
+    "@types/css": "^0.0.37",
     "@types/figlet": "^1.5.8",
     "@types/inquirer": "^9.0.7",
     "@types/js-beautify": "^1.14.3",

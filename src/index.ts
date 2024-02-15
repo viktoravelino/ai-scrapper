@@ -23,6 +23,16 @@ async function run(url: string, target: string) {
     target,
   });
 
+  // mock selectors
+  // const selectors = [
+  //   ".MuiButton-root",
+  //   ".MuiButton-variantSolid",
+  //   ".MuiButton-colorPrimary",
+  //   ".MuiButton-sizeMd",
+  //   ".MuiButtonBase-root",
+  //   ".MuiIconButton-root",
+  // ];
+
   while (true) {
     const continueScreenshot = await input({
       message: "Would you like to continue taking screenshots? (y/n): ",
