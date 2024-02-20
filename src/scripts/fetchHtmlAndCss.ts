@@ -1,7 +1,5 @@
-import puppeteer, { ElementHandle } from "puppeteer";
 import * as cheerio from "cheerio";
 import css from "css";
-import * as fs from "fs";
 
 interface Position {
   start: {
@@ -99,19 +97,44 @@ const mockClasses = `
     color: transparent;
   }`;
 
-(async () => {
-  //   const browser = await puppeteer.launch({ headless: "new" });
-  //   const page = await browser.newPage();
+const TEST = false;
 
-  //   await page.goto("https://mui.com/joy-ui/react-button/");
+export async function fetchHtmlAndCss() {
+  const response = await fetch("https://mui.com/joy-ui/react-button/");
+  const pageHtml = await response.text();
+  const $ = cheerio.load(pageHtml);
 
-  //   //   // Extract CSS rules dynamically imported via JavaScript
-  //   const dynamicCssRules = await page.evaluate(() => {
-  //     const styleElements = Array.from(document.querySelectorAll("style"));
-  //     return styleElements.map((element) => element.textContent).join("\n");
-  //   });
+  const cssText = await fetchCss(pageHtml);
+  const htmlText = await fetchHtml(pageHtml);
+  return { cssText, htmlText };
+}
 
-  const parsedDynamicCss = css.parse(mockClasses);
+async function fetchHtml(html: string) {
+  const $ = cheerio.load(html);
+
+  const elementHtml = $(
+    ".MuiButton-root.MuiButton-variantSolid.MuiButton-colorPrimary.MuiButton-sizeMd.css-4qk412"
+  )
+    .parent()
+    .html();
+
+  return elementHtml;
+}
+
+async function fetchCss(html: string) {
+  let dynamicCssRules = mockClasses;
+
+  if (!TEST) {
+    const $ = cheerio.load(html);
+
+    // Extract CSS rules from style elements
+    dynamicCssRules = $("style")
+      .map((_, element) => $(element).text())
+      .get()
+      .join("\n");
+  }
+
+  const parsedDynamicCss = css.parse(dynamicCssRules);
 
   // TODO: receive as an argument
   const classes = ["test", "css-18lygt3"];
@@ -128,10 +151,8 @@ const mockClasses = `
     },
   ]);
 
-  console.log(stringifiedRules);
-
-  //   await browser.close();
-})();
+  return stringifiedRules;
+}
 
 function stringifyRules(rules: css.Rule[]) {
   return css.stringify({
@@ -173,34 +194,3 @@ function createArrayOfUniqueDeclarations(rules: Rule[]) {
       .values()
   );
 }
-
-// (async () => {
-//   const browser = await puppeteer.launch({ headless: "new" });
-//   const page = await browser.newPage();
-
-//   await page.goto("https://mui.com/joy-ui/react-button/");
-
-//   //   // Extract CSS rules dynamically imported via JavaScript
-//   const dynamicCssRules = await page.evaluate(() => {
-//     const styleElements = Array.from(document.querySelectorAll("style"));
-//     return styleElements.map((element) => element.textContent).join("\n");
-//   });
-
-//   const parsedDynamicCss = css.parse(dynamicCssRules);
-
-//   //   // Filter and extract CSS rules associated with a specific class or selector
-//   const classSelector = ".css-18lygt3";
-//   const classRules = parsedDynamicCss?.stylesheet?.rules.filter((rule) => {
-//     if (rule.type === "rule") {
-//       // @ts-ignore
-//       return rule.selectors.some((selector) =>
-//         selector.includes(classSelector)
-//       );
-//     }
-//     return false;
-//   });
-
-//   console.log(stringifyRules(classRules!));
-
-//   await browser.close();
-// })();
