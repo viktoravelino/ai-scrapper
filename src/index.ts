@@ -1,70 +1,71 @@
-import { program } from "commander";
-import { fetchHtmlAndCreateDataFile } from "./scripts/create-data";
-import { prepareDocsIntoVectorStore } from "./scripts/prepare-docs";
+import { program } from 'commander';
+import { fetchHtmlAndCreateDataFile } from './scripts/create-data';
+import { prepareDocsIntoVectorStore } from './scripts/prepare-docs';
 
-import { fetchSelectorsFromOpenAI } from "./scripts/openAI";
-import { OpenAIEmbeddings } from "@langchain/openai";
-import { screenshotComponents } from "./scripts/screenshot";
-import { input } from "@inquirer/prompts";
-import dotenv from "dotenv";
+import { fetchSelectorsFromOpenAI } from './scripts/openAI';
+import { OpenAIEmbeddings } from '@langchain/openai';
+import { screenshotComponents } from './scripts/screenshot';
+import { input } from '@inquirer/prompts';
+import dotenv from 'dotenv';
+import { createFiles } from './scripts/create-files';
 dotenv.config();
 
 async function run(url: string, target: string) {
-  // fetch the html and create a data file
-  const docsCreated = await fetchHtmlAndCreateDataFile(url);
+    // fetch the html and create a data file
+    const docsCreated = await fetchHtmlAndCreateDataFile(url);
 
-  const embeddings = new OpenAIEmbeddings();
+    const embeddings = new OpenAIEmbeddings();
 
-  // prepare the docs into a vector store
-  const vectorStore = await prepareDocsIntoVectorStore(docsCreated, embeddings);
+    // prepare the docs into a vector store
+    const vectorStore = await prepareDocsIntoVectorStore(docsCreated, embeddings);
 
-  // fetch the selectors from openai
-  const selectors = await fetchSelectorsFromOpenAI(vectorStore, {
-    target,
-  });
-
-  // mock selectors
-  // const selectors = [
-  //   ".MuiButton-root",
-  //   ".MuiButton-variantSolid",
-  //   ".MuiButton-colorPrimary",
-  //   ".MuiButton-sizeMd",
-  //   ".MuiButtonBase-root",
-  //   ".MuiIconButton-root",
-  // ];
-
-  while (true) {
-    const continueScreenshot = await input({
-      message: "Would you like to continue taking screenshots? (y/n): ",
+    // fetch the selectors from openai
+    const selectors = await fetchSelectorsFromOpenAI(vectorStore, {
+        target,
     });
-    if (continueScreenshot === "n") {
-      process.exit(0);
+
+    // mock selectors
+    // const selectors = [
+    //   ".MuiButton-root",
+    //   ".MuiButton-variantSolid",
+    //   ".MuiButton-colorPrimary",
+    //   ".MuiButton-sizeMd",
+    //   ".MuiButtonBase-root",
+    //   ".MuiIconButton-root",
+    // ];
+
+    while (true) {
+        const continueScreenshot = await input({
+            message: 'Would you like to continue taking screenshots? (y/n): ',
+        });
+        if (continueScreenshot === 'n') {
+            process.exit(0);
+        }
+
+        if (continueScreenshot === 'y') {
+            break;
+        }
+
+        console.log('Invalid input, please try again');
     }
 
-    if (continueScreenshot === "y") {
-      break;
-    }
-
-    console.log("Invalid input, please try again");
-  }
-
-  await screenshotComponents(url, target, selectors);
-
-  process.exit(0);
+    await screenshotComponents(url, target, selectors);
+    await createFiles();
+    process.exit(0);
 }
 
 async function main() {
-  program
-    .name("screenshot-scraper")
-    .description("CLI to take screenshots of elements on a webpage")
-    .version("0.0.1");
+    program
+        .name('screenshot-scraper')
+        .description('CLI to take screenshots of elements on a webpage')
+        .version('0.0.1');
 
-  program
-    .argument("<url>", "URL of the webpage to take screenshots of")
-    .argument("<target>", "The type of element to take screenshots of")
-    .action(run);
+    program
+        .argument('<url>', 'URL of the webpage to take screenshots of')
+        .argument('<target>', 'The type of element to take screenshots of')
+        .action(run);
 
-  await program.parseAsync(process.argv);
+    await program.parseAsync(process.argv);
 }
 
 main();
