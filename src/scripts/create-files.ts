@@ -2,9 +2,9 @@ import OpenAI from 'openai';
 import { instructions } from '../utils/create-file-ai-instructions';
 import { promises as fs, createWriteStream } from 'fs';
 import archiver from 'archiver';
-const outputDir = './output';
+
 const openai = new OpenAI({
-    apiKey: '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',
+    apiKey: process.env.OPENAI_API_KEY,
 });
 
 const mockHTML = `<button tabindex="0" type="button">Large<span class="MuiTouchRipple-root css-w0pj6f"></span></button>`;
@@ -41,6 +41,10 @@ const mockCSS = `{
 }`;
 const type = 'react';
 const name = 'Button';
+const outputDir =
+    type === 'react'
+        ? `${type}/${type}-demo/src/components/${name}`
+        : `${type}/${type}-demo/src/app/components/${name}`;
 // Function to create a zip file of a directory
 const zipDirectory = (sourceDir: string, outPath: string) => {
     const archive = archiver('zip', { zlib: { level: 9 } });
