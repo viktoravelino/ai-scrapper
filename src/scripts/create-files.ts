@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import { instructions } from '../utils/create-file-ai-instructions';
 import { promises as fs, createWriteStream } from 'fs';
 import archiver from 'archiver';
-
+require('dotenv').config();
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
@@ -45,6 +45,7 @@ const outputDir =
     type === 'react'
         ? `${type}/${type}-demo/src/components/${name}`
         : `${type}/${type}-demo/src/app/components/${name}`;
+const zipDir = './zips';
 // Function to create a zip file of a directory
 const zipDirectory = (sourceDir: string, outPath: string) => {
     const archive = archiver('zip', { zlib: { level: 9 } });
@@ -124,10 +125,13 @@ export async function createFiles() {
             // Write the content to a new file
             await fs.writeFile(`${outputDir}/${filename}`, content, 'utf8');
         }
-
+        console.log('📁 Files written to:', outputDir);
         // All files have been written, now zip the directory
-        const zipPath = `${outputDir}/${type}-${name}-files.zip`;
-        await zipDirectory(outputDir, zipPath);
+        //check that zipDir exists and create it if not
+        await fs.mkdir(zipDir, { recursive: true });
+
+        const zipPath = `${zipDir}/${type}-${name}-files.zip`;
+        await zipDirectory(zipDir, zipPath);
         console.log(`🤐 Zipping up the files and exporting to ${zipPath}`);
     } catch (error) {
         console.error('Error:', error);

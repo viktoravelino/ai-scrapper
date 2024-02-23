@@ -1,16 +1,13 @@
-import { OpenAI } from "@langchain/openai";
+import { OpenAI } from '@langchain/openai';
 import {
-  ChatPromptTemplate,
-  HumanMessagePromptTemplate,
-  SystemMessagePromptTemplate,
-} from "@langchain/core/prompts";
-import {
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
-import { StringOutputParser } from "@langchain/core/output_parsers";
-import { formatDocumentsAsString } from "langchain/util/document";
-import { MemoryVectorStore } from "langchain/vectorstores/memory";
+    ChatPromptTemplate,
+    HumanMessagePromptTemplate,
+    SystemMessagePromptTemplate,
+} from '@langchain/core/prompts';
+import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
+import { StringOutputParser } from '@langchain/core/output_parsers';
+import { formatDocumentsAsString } from 'langchain/util/document';
+import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 
 const METADATA_PROMPT = `
 You are a helpful code debugger.
@@ -33,73 +30,73 @@ Also, each element only contains the opening tag, so you will have to use your b
 `;
 
 export async function fetchSelectorsFromOpenAI(
-  vectorStore: MemoryVectorStore,
-  { target }: { target: string }
+    vectorStore: MemoryVectorStore,
+    { target }: { target: string }
 ) {
-  try {
-    console.log("Fetching selectors...");
-
-    const model = new OpenAI({
-      modelName: "gpt-3.5-turbo-1106",
-      temperature: 0.5,
-      topP: 1,
-      frequencyPenalty: 0,
-      presencePenalty: 0,
-      maxTokens: 256,
-      modelKwargs: {
-        response_format: { type: "json_object" },
-      },
-    });
-
-    const vectorStoreRetriever = vectorStore.asRetriever({
-      k: 100,
-    });
-
-    const messages = [
-      SystemMessagePromptTemplate.fromTemplate(METADATA_PROMPT),
-      HumanMessagePromptTemplate.fromTemplate(
-        "Please find all elements of this type {target}"
-      ),
-    ];
-
-    const prompt = ChatPromptTemplate.fromMessages(messages);
-
-    const chain = RunnableSequence.from([
-      {
-        html: vectorStoreRetriever.pipe(formatDocumentsAsString),
-        target: new RunnablePassthrough(),
-      },
-      prompt,
-      model,
-      new StringOutputParser(),
-    ]);
-
-    console.log("Invoking chain...");
-    const answer = await chain.invoke(target);
-
-    console.log("Chain response: ", answer);
-
-    // try to parse the answer as json and return it
-    // if it fails, convert to an array
     try {
-      const parsedAnswer = JSON.parse(answer);
-      return parsedAnswer.selectors;
+        console.log('Fetching selectors...');
+
+        const model = new OpenAI({
+            modelName: 'gpt-3.5-turbo-1106',
+            temperature: 0.5,
+            topP: 1,
+            frequencyPenalty: 0,
+            presencePenalty: 0,
+            maxTokens: 512,
+            modelKwargs: {
+                response_format: { type: 'json_object' },
+            },
+        });
+
+        const vectorStoreRetriever = vectorStore.asRetriever({
+            k: 100,
+        });
+
+        const messages = [
+            SystemMessagePromptTemplate.fromTemplate(METADATA_PROMPT),
+            HumanMessagePromptTemplate.fromTemplate(
+                'Please find all elements of this type {target}'
+            ),
+        ];
+
+        const prompt = ChatPromptTemplate.fromMessages(messages);
+
+        const chain = RunnableSequence.from([
+            {
+                html: vectorStoreRetriever.pipe(formatDocumentsAsString),
+                target: new RunnablePassthrough(),
+            },
+            prompt,
+            model,
+            new StringOutputParser(),
+        ]);
+
+        console.log('Invoking chain...');
+        const answer = await chain.invoke(target);
+
+        console.log('Chain response: ', answer);
+
+        // try to parse the answer as json and return it
+        // if it fails, convert to an array
+        try {
+            const parsedAnswer = JSON.parse(answer);
+            return parsedAnswer.selectors;
+        } catch (error) {
+            // grab the first array of selectors from the response or the second if the first is empty
+            let selectors = answer.split('[')[2];
+
+            if (selectors === undefined) {
+                selectors = answer.split('[')[1];
+            }
+
+            return selectors
+                .replace(/"/g, '')
+                .split(',')
+                .filter((selector) => selector.trim().length > 1)
+                .map((selector) => selector.trim());
+        }
     } catch (error) {
-      // grab the first array of selectors from the response or the second if the first is empty
-      let selectors = answer.split("[")[2];
-
-      if (selectors === undefined) {
-        selectors = answer.split("[")[1];
-      }
-
-      return selectors
-        .replace(/"/g, "")
-        .split(",")
-        .filter((selector) => selector.trim().length > 1)
-        .map((selector) => selector.trim());
+        console.error('Error fetching selectors: ', error);
+        process.exit(1);
     }
-  } catch (error) {
-    console.error("Error fetching selectors: ", error);
-    process.exit(1);
-  }
 }

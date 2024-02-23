@@ -10,6 +10,10 @@ export async function screenshotComponents(url: string, target: string, selector
         selectors,
     });
     console.log('Removing old images...');
+    // if there's no images folder, create it
+    if (!fs.existsSync(join(__dirname, 'images'))) {
+        fs.mkdirSync(join(__dirname, 'images'));
+    }
     fs.readdirSync(join(__dirname, 'images')).forEach((file) => {
         // if (file.endsWith(".png")) {
         fs.unlinkSync(join(__dirname, 'images', file));
@@ -84,6 +88,11 @@ export async function screenshotComponents(url: string, target: string, selector
     console.log('Taking screenshots of elements...');
 
     const promises = Array.from(elementMap).map(async ([, { element, index }]) => {
+        // if there's no images folder, create it
+        if (!fs.existsSync(join(__dirname, 'images'))) {
+            fs.mkdirSync(join(__dirname, 'images'));
+        }
+        // console.log('element', element);
         await element
             .screenshot({
                 path: join(__dirname, 'images', `${target}-${index}.png`),
@@ -97,6 +106,7 @@ export async function screenshotComponents(url: string, target: string, selector
 
         // save classNames to a file
         const classNames = await element.evaluate((el) => el.classList.toString());
+
         fs.writeFileSync(join(__dirname, 'images', `${target}-${index}.txt`), classNames);
     });
 
