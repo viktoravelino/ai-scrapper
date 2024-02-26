@@ -3,9 +3,7 @@ import './Button.scss';
 
 const Button = () => {
     return (
-        <button className='large-button'>
-            Large<span className='ripple-effect'></span>
-        </button>
+        <button className='button' tabIndex={0} type='button'>Large<span className='ripple'></span></button>
     );
 };
 
