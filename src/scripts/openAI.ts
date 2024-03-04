@@ -96,6 +96,7 @@ export async function fetchSelectorsFromOpenAI(
         .replace(/"/g, "")
         .split(",")
         .filter((selector) => selector.trim().length > 1)
+        .filter((selector) => selector.startsWith("."))
         .map((selector) => selector.trim());
     }
   } catch (error) {
